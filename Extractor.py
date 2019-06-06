@@ -140,9 +140,3 @@ class RedditCrawler:
         with iopen(fname, 'wb') as file:
             file.write(r.content)
             file.close()
-
-
-
-
-
-
