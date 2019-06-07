@@ -25,8 +25,9 @@ class RedditCrawler:
         self.__header = {'user-agent': 'reddit-{}'.format(os.environ.get('USER', 'Mozilla/5.0'))}
 
         self.__data = None
+        self.__pagedata = None
 
-        self.__counter = -1
+        self.__counter = 0
         self.__page = 0
 
         self.refresh()
@@ -37,9 +38,15 @@ class RedditCrawler:
         Request new set of data and insert it into self.__data
         :param pageinfo: additional information about the page such as page number
         """
-        self.__data = requests.get(self.__url + pageinfo, headers=self.__header).json()
+        response = requests.get(self.__url + pageinfo, headers=self.__header).json()
 
-        self.__data = self.__data['data']['children']
+        self.__data = response['data']['children']
+
+        self.__pagedata = response.copy()['data']
+        self.__pagedata.pop('dist')
+        self.__pagedata.pop('modhash')
+        self.__pagedata.pop('children')
+
         i=0
         while i < len(self.__data):
             if self.__data[i]['data']['stickied']:
@@ -47,7 +54,7 @@ class RedditCrawler:
             else:
                 i+=1
 
-        self.__counter = -1
+        self.__counter = 0
 
     def to_next_post(self):
         """
@@ -56,13 +63,12 @@ class RedditCrawler:
         """
         self.__counter += 1
 
-        # TODO Allow shifting to the next page
 
-        # temporarily: loops the end back to the front
-        if self.__counter > len(self.__data):
-            self.__counter=0
-
-        return self.__data[self.__counter]
+        if self.__counter >= len(self.__data):
+            # shift to the next page
+            self.__page += 1
+            pageinfo = "count={}&after={}".format(25*self.__page, self.__pagedata['after'])
+            self.refresh(pageinfo)
 
     def to_previous_post(self):
         """
@@ -71,27 +77,26 @@ class RedditCrawler:
         """
         self.__counter -= 1
 
-        # TODO allow shifting to the previous page
-
-        # temporarily: loops the start back to the end
         if self.__counter < 0:
-            self.__counter = len(self.__data)-1
+            if self.__page == 0:
+                self.__counter=0
+            else:
+                # shift to previous page
+                self.__page -= 1
+                if self.__page == 1:
+                    pageinfo = ""
+                else:
+                    pageinfo = "count={}&before={}".format(25*self.__page, self.__pagedata['after'])
+                self.refresh(pageinfo)
 
+    def get_post(self):
         return self.__data[self.__counter]
 
-
-    # Most of the code comes from
     def download_media(self):
         """
         Downloads image/gif from the last post
         obtained via to_next_post / to_previous_post
         """
-
-        # in case this method is called right after refresh() or initialization
-        if self.__counter==-1:
-            print("Please call either to_next_post or to_previous_post "
-                  + "to move the counter to a non-negative post")
-            return
 
         # obtain the domain and url of post to be downloaded
         post = self.__data[self.__counter]['data']
