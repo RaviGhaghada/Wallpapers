@@ -30,7 +30,10 @@ class MediaHandler:
         """
             Returns true if this is a downloadable picture from i.reddit.com
         """
-        return post["domain"] == "i.reddit.com" and not post["is_video"]
+        ispicture = post["url"].endswith(".jpg") or post["url"].endswith(
+            ".png") or post["url"].endswith(".jpeg")
+
+        return not ispicture
 
     def download_media(self, post) -> str:
         """
@@ -58,5 +61,5 @@ class MediaHandler:
             file.write(r.content)
             file.close()
 
-        print("> " + post["name"] + " > " + post["url"] + " > " + extension)
+#        print("> " + post["name"] + " > " + post["url"] + " > " + extension)
         return imgpath
