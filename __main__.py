@@ -2,19 +2,25 @@
 from time import sleep
 from models.crawler import Crawler
 from models.mediahandler import MediaHandler
-from models.wallsetter import WallSetter
+from models.wallmanager import WallManager
 
 crawler = Crawler("Eyebleach")
 handler = MediaHandler()
 
-while True:
-    post = crawler.get_post()
+try:
+    while True:
+        post = crawler.get_post()
 
-    if not handler.is_illegal(post):
-        imgpath = handler.download_media(post)
-        WallSetter.set_wallpaper(imgpath)
+        if not handler.is_illegal(post):
+            imgpath = handler.download_media(post)
+            WallManager.set_wallpaper(imgpath)
 
-        if input("y?") == "y":
-            break
+            if input("y?") == "y":
+                break
 
-    crawler.to_next_post()
+        crawler.to_next_post()
+
+except SystemExit as e:
+    if e.code != 0:
+        # reset wallpaper to what it was before
+        WallManager.set_wallpaper(handler.get_initial_path())

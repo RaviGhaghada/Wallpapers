@@ -1,7 +1,9 @@
+from models.wallmanager import WallManager
 import requests
 import os
 import io
 import sys
+from models.wallmanager import WallManager
 
 
 class MediaHandler:
@@ -19,6 +21,13 @@ class MediaHandler:
         try:
             self._path = os.path.expanduser("~") + "/.wallpapers/images"
             os.makedirs(self._path)
+
+            self._initialpath = WallManager.get_wallpaper_path()
+
+            if self._initialpath == "":
+                # gsettings will not accept empty paths
+                self._initialpath = "0"
+
         except FileExistsError:
             pass
         except Exception as e:
@@ -63,3 +72,6 @@ class MediaHandler:
 
 #        print("> " + post["name"] + " > " + post["url"] + " > " + extension)
         return imgpath
+
+    def get_initial_path(self):
+        return self._initialpath
