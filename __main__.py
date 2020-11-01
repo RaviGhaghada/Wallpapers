@@ -1,9 +1,21 @@
 #!/bin/python3
+import argparse
 from models import Crawler, MediaHandler, WallManager
 
 
 def main():
-    crawler = Crawler("Eyebleach")
+
+    parser = argparse.ArgumentParser(
+        description='Python library that fetches pictures from a given subreddit'
+    )
+
+    required = parser.add_argument_group('required arguments')
+    required.add_argument('-s', '-subreddit', dest='subreddit',
+                          type=str, required=True, help='name of subreddit')
+
+    arguments = parser.parse_args()
+
+    crawler = Crawler(arguments.subreddit)
     handler = MediaHandler()
 
     try:
