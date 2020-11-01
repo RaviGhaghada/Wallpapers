@@ -18,7 +18,6 @@ class MediaHandler:
         """
         try:
             self._path = os.path.expanduser("~") + "/.wallpapers/images"
-            print(self._path)
             os.makedirs(self._path)
         except FileExistsError:
             pass
@@ -31,12 +30,11 @@ class MediaHandler:
         """
             Returns true if this is a downloadable picture from i.reddit.com
         """
-        return "domain" in post and post["domain"] == "i.reddit.com" and not post["is_video"]
+        return post["domain"] == "i.reddit.com" and not post["is_video"]
 
     def download_media(self, post) -> str:
         """
-        Downloads image from the last post
-        obtained via to_next_post / to_previous_post
+        Downloads image from post object and returns filepath to image
         """
 
         if self.is_illegal(post):
@@ -54,8 +52,11 @@ class MediaHandler:
 
         # write media to file
         filename = post["name"] + extension
-        with io.open(os.path.join(self._path, filename), 'wb') as file:
+        imgpath = os.path.join(self._path, filename)
+
+        with io.open(imgpath, 'wb') as file:
             file.write(r.content)
             file.close()
 
-        return filename
+        print("> " + post["name"] + " > " + post["url"] + " > " + extension)
+        return imgpath
